@@ -1,0 +1,23 @@
+{
+  "name": "webdev-tasks-3",
+  "version": "1.0.0",
+  "description": "Тесты для библиотеки Flow",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dodo888/webdev-tasks-3.git"
+  },
+  "author": "Vladimir Smirnov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Dodo888/webdev-tasks-3/issues"
+  },
+  "homepage": "https://github.com/Dodo888/webdev-tasks-3#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  }
+}
