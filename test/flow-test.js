@@ -1,46 +1,57 @@
-const flow = require('../lib/flow');
+const flow = require('flow/lib/flow.js');
 const assert = require('assert');
 const mocha = require('mocha');
 const chai = require('chai')
     , expect = chai.expect
     , should = chai.should();
+const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
+chai.use(sinonChai);
 
 
 describe('flow.serial', function () {
     it('should run functions in right order', function () {
-        flow.serial([function (callback) {
-                callback(null, 2);
-            }, function (data, callback) {
-                callback(null, data+5)
-            }, function (data, callback) {
-                callback(null, data*2)
-            }],
+        var func1 = sinon.spy(function (callback) {
+            callback(null, 2);
+        });
+        var func2 = sinon.spy(function (data, callback) {
+            callback(null, data+5);
+        });
+        var func3 = sinon.spy(function (data, callback) {
+            callback(null, data*2);
+        });
+        flow.serial([func1, func2, func3],
             function (error, data) {
                 expect(error).not.to.be.ok;
                 data.should.equal(14);
+                func1.should.be.calledBefore(func2);
+                func2.should.be.calledBefore(func3);
             });
     });
 
     it('should return error if one function ends with error', function () {
         flow.serial([function (callback) {
-            callback(true, '');
-        }, function (data, callback) {
-            callback(null, '')
-        }],
-        function (error, data) {
-            error.should.be.ok;
-        });
-    });
-
-    it('should not run second function if first failed', function () {
-        flow.serial([function (callback) {
-                callback(true, 10);
+                callback(true, '');
             }, function (data, callback) {
-                callback(null, 12)
+                callback(null, '');
             }],
             function (error, data) {
                 error.should.be.ok;
+            });
+    });
+
+    it('should not run second function if first failed', function () {
+        var func1 = function (callback) {
+            callback(true, 10);
+        };
+        var func2 = sinon.spy(function (data, callback) {
+            callback(null, 12);
+        });
+        flow.serial([func1, func2],
+            function (error, data) {
+                error.should.be.ok;
                 data.should.equal(10);
+                func2.should.not.have.been.called;
             });
     });
 
@@ -54,14 +65,18 @@ describe('flow.serial', function () {
 
 describe('flow.parallel', function () {
     it('should run all functions', function () {
-        flow.parallel([function (callback) {
+        var func1 = sinon.spy(function (callback) {
             callback(null, 1);
-        }, function (callback) {
+        });
+        var func2 = sinon.spy(function (callback) {
             setTimeout(function () {callback(null, 2);}, 500)
-        }], function (error, data) {
+        });
+        flow.parallel([func1, func2], function (error, data) {
             data.should.be.a('array');
             data.length.should.equal(2);
             data[1].should.equal(2);
+            func1.should.be.calledOnce;
+            func2.should.be.calledOnce;
         });
     });
 
@@ -98,11 +113,15 @@ describe('flow.parallel', function () {
 
 describe('flow.map', function () {
     it('should run function with all values', function () {
-        flow.map([10, 20, 30], function (value, callback) {
+        var func = sinon.spy(function (value, callback) {
             callback(null, value*2);
-        }, function (error, data) {
+        });
+        flow.map([10, 20, 30], func, function (error, data) {
             expect(error).not.to.be.ok;
             data.length.should.equal(3);
+            func.withArgs(10).should.be.calledOnce;
+            func.withArgs(20).should.be.calledOnce;
+            func.withArgs(30).should.be.calledOnce;
         });
     });
 

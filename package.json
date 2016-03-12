@@ -16,6 +16,11 @@
     "url": "https://github.com/Dodo888/webdev-tasks-3/issues"
   },
   "homepage": "https://github.com/Dodo888/webdev-tasks-3#readme",
+  "dependencies": {
+    "flow": "git://github.com/Dodo888/javascript-tasks-9.git",
+    "sinon": "^1.17.3",
+    "sinon-chai": "^2.8.0"
+  },
   "devDependencies": {
     "chai": "^3.5.0",
     "mocha": "^2.4.5"
