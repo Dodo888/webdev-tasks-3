@@ -4,7 +4,8 @@
   "description": "Тесты для библиотеки Flow",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "lint": "jscs ."
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,7 @@
   "homepage": "https://github.com/Dodo888/webdev-tasks-3#readme",
   "dependencies": {
     "flow": "git://github.com/Dodo888/javascript-tasks-9.git",
+    "jscs": "^2.11.0",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0"
   },
