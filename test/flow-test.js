@@ -9,45 +9,47 @@ chai.use(sinonChai);
 
 
 describe('flow.serial', function () {
-    it('should run functions in right order', function () {
+    it('should run functions in right order', function (done) {
         var func1 = sinon.spy(function (callback) {
             setTimeout(function () {
                 callback(null, '');
-            }, 300);
+            }, 150);
         });
         var func2 = sinon.spy(function (data, callback) {
             setTimeout(function () {
                 callback(null, '');
-            }, 200);
+            }, 100);
         });
         var func3 = sinon.spy(function (data, callback) {
             setTimeout(function () {
                 callback(null, '');
-            }, 100);
+            }, 50);
         });
         flow.serial([func1, func2, func3],
             function (error, data) {
                 expect(error).not.to.be.ok;
                 func1.should.be.calledBefore(func2);
                 func2.should.be.calledBefore(func3);
+                func3.should.not.be.calledBefore(func1);
+                done();
             });
     });
 
-    it('should call next function with the result of current', function () {
+    it('should call next function with the result of current', function (done) {
         var func1 = sinon.spy(function (callback) {
             setTimeout(function () {
                 callback(null, 2);
-            }, 300);
+            }, 150);
         });
         var func2 = sinon.spy(function (data, callback) {
             setTimeout(function () {
                 callback(null, data + 5);
-            }, 200);
+            }, 100);
         });
         var func3 = sinon.spy(function (data, callback) {
             setTimeout(function () {
                 callback(null, data * 2);
-            }, 100);
+            }, 50);
         });
         flow.serial([func1, func2, func3],
             function (error, data) {
@@ -55,6 +57,7 @@ describe('flow.serial', function () {
                 func2.withArgs(2).should.be.called;
                 func3.withArgs(7).should.be.called;
                 data.should.equal(14);
+                done();
             });
     });
 
@@ -69,22 +72,23 @@ describe('flow.serial', function () {
             });
     });
 
-    it('should not run second function if first failed', function () {
+    it('should not run second function if first failed', function (done) {
         var func1 = function (callback) {
             setTimeout(function () {
                 callback(true, 10);
-            }, 200);
+            }, 100);
         };
         var func2 = sinon.spy(function (data, callback) {
             setTimeout(function () {
                 callback(null, 12);
-            }, 100);
+            }, 50);
         });
         flow.serial([func1, func2],
             function (error, data) {
                 error.should.be.ok;
                 data.should.equal(10);
                 func2.should.not.have.been.called;
+                done();
             });
     });
 
@@ -97,69 +101,73 @@ describe('flow.serial', function () {
 });
 
 describe('flow.parallel', function () {
-    it('should run all functions', function () {
+    it('should run all functions', function (done) {
         var func1 = sinon.spy(function (callback) {
             setTimeout(function () {
                 callback(null, 1);
-            }, 400);
+            }, 100);
         });
         var func2 = sinon.spy(function (callback) {
             setTimeout(function () {
                 callback(null, 2);
-            }, 200);
+            }, 50);
         });
         flow.parallel([func1, func2], function (error, data) {
             data.should.be.a('array');
             data.length.should.equal(2);
             func1.should.be.calledOnce;
             func2.should.be.calledOnce;
+            done();
         });
     });
 
-    it('should write results in right order', function () {
+    it('should write results in right order', function (done) {
         flow.parallel([function (callback) {
             setTimeout(function () {
                 callback(null, 1);
-            }, 500);
+            }, 100);
         }, function (callback) {
             setTimeout(function () {
                 callback(null, 2);
-            }, 200);
+            }, 50);
         }], function (error, data) {
             data.should.be.a('array');
             data[0].should.equal(1);
             data[1].should.equal(2);
+            done();
         });
     });
 
-    it('should return error if one function fails', function () {
-        flow.parallel([function (callback) {
-                setTimeout(function () {
-                    callback(true, '');
-                }, 500);
-            }, function (callback) {
-                setTimeout(function () {
-                    callback(null, '');
-                }, 200);
-            }],
-            function (error, data) {
-                error.should.be.ok;
-            });
-    });
-
-    it('should finish other functions if one fails', function () {
+    it('should return error if one function fails', function (done) {
         flow.parallel([function (callback) {
                 setTimeout(function () {
                     callback(true, '');
                 }, 100);
             }, function (callback) {
                 setTimeout(function () {
-                    callback(null, 1);
-                }, 300);
+                    callback(null, '');
+                }, 40);
             }],
             function (error, data) {
                 error.should.be.ok;
-                data[1].should.equal(2);
+                done();
+            });
+    });
+
+    it('should finish other functions if one fails', function (done) {
+        flow.parallel([function (callback) {
+                setTimeout(function () {
+                    callback(true, '');
+                }, 50);
+            }, function (callback) {
+                setTimeout(function () {
+                    callback(null, 1);
+                }, 100);
+            }],
+            function (error, data) {
+                error.should.be.ok;
+                data[1].should.equal(1);
+                done();
             });
     });
 
@@ -210,22 +218,23 @@ describe('flow.map', function () {
             });
     });
 
-    it('should finish other functions if one fails', function () {
+    it('should finish other functions if one fails', function (done) {
         flow.map([0, 10, 20], function (value, callback) {
                 if (value == 0) {
                     setTimeout(function () {
                         callback(true, 0);
-                    }, 200);
+                    }, 100);
                 } else {
                     setTimeout(function () {
                         callback(null, value);
-                    }, 100);
+                    }, 50);
                 }
             },
             function (error, data) {
                 error.should.be.ok;
                 data[1].should.equal(10);
                 data[2].should.equal(20);
+                done();
             });
     });
 
